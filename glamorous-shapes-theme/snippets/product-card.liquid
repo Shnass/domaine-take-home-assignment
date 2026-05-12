@@ -2,83 +2,39 @@
     const variantsDataProd{{ product.id }} =[
     {% for variant in product.variants %}
         {
-            id: parseInt('{{ variant.id }}'),
+            id: {{ variant.id }},
             title: '{{ variant.title }}',
+            titleAlt: '{{ product.title }} - {{ variant.title }}',
             price: '{{ variant.price | money }}',
             compareAtPrice: '{{ variant.compare_at_price | money }}',
             image: '{{ variant.featured_image | image_url: width: 800 }}',
-            secondaryImage: '{{ variant.metafields.custom.secondary_image | image_url: width: 800 }}'
-        },
+            secondaryImage: '{{ variant.metafields.custom.secondary_image.value | image_url: width: 800 }}'
+        }
+        {% unless forloop.last %},{% endunless %}
     {% endfor %}
     ]
-
-    function setImageSrc(element, src){
-        element.setAttribute('src', src);
-    }
-
-    function updateImages(product, img, imgSecondary){
-        const primaryImage = product.querySelector('[data-placeholder="primaryImg"]');
-        const secondaryImage = product.querySelector('[data-placeholder="secondaryImg"]');
-
-        setImageSrc(primaryImage, img);
-        setImageSrc(secondaryImage, imgSecondary);
-    }
-
-    function priceToNumber(price){
-        return Number(price.replace(/[^0-9.-]+/g, ""));
-    }
-
-    function updatePrice(product, price, priceOld = 0){
-        const productPrice = product.querySelector('[data-placeholder="price"]');
-        const ifOnSale = priceOld && priceToNumber(price) < priceToNumber(priceOld);
-
-        product.querySelector('[data-placeholder="sale-badge"]').style.display = ifOnSale ? 'block' : 'none';
-        
-        productPrice.innerHTML = `
-            ${ifOnSale ? `<span class="line-through">${priceOld}</span>` : ''}
-            <span class="${ifOnSale ? 'text-red-500' : ''}">${price}</span>
-        `
-    }
-
-    function highlightButton(product, id){
-        product.querySelectorAll('[data-button]').forEach(b => {
-            if(Number(b.dataset.button) !== id) b.classList.remove('outline-1');
-            else  b.classList.add('outline-1');
-        }) 
-    }
-
-    function selectProductVariant(variantsArr, productId, variantId){
-        const variant = variantsArr.find(v => v.id === parseInt(variantId));
-        if (!variant) return;
-
-        const productCard = document.querySelector(`[data-product="${productId}"]`);
-        const {id, title, price, compareAtPrice, image, secondaryImage} = variant;
-
-        highlightButton(productCard, id);
-        updatePrice(productCard, price, compareAtPrice);
-        updateImages(productCard, image, secondaryImage);
-    }
 </script>
+<script src="{{ 'product-card.js' | asset_url }}" defer></script>
 
 
-<div class="collection-product group/product w-1/2 md:w-1/3 lg:w-1/4" data-product="{{ product.id }}">
+<div class="collection-product group/product" data-product="{{ product.id }}">
 
     {% assign current_variant = product.selected_or_first_available_variant %}
 
     {% if current_variant.featured_image %}
-    <div class="border border-neutral-200 rounded-2xl p-4 relative">
+    <div class="border border-neutral-200 rounded-2xl p-4 relative mb-4">
         <div class="pt-[90%] relative">
             <img 
                 src="{{ current_variant.featured_image | image_url: width: 800 }}" 
-                alt="{{ product.title }}" 
+                alt="{{ product.title }} - {{ current_variant.title }}" 
                 width="400"
                 height="400"
                 data-placeholder="primaryImg"
                 class="absolute left-0 top-0 w-full h-full! object-contain opacity-100 transition-opacity group-hover/product:opacity-0"
             />
             <img 
-                src="{{ current_variant.metafields.custom.secondary_image | image_url: width: 800 }}" 
-                alt="{{ product.title}}" 
+                src="{{ current_variant.metafields.custom.secondary_image.value | image_url: width: 800 }}" 
+                alt="{{ product.title}} - {{ current_variant.title }}" 
                 width="400"
                 height="400"
                 data-placeholder="secondaryImg"
@@ -86,27 +42,31 @@
             />
         </div>
         <span 
-            {% if current_variant.metafields.compareAtPrice > current_variant.price %}style="display:block"{% endif %}
             data-placeholder="sale-badge" 
-            class="text-red-500 border rounded-xl absolute text-md left-5 top-5 px-3 py-0.5 hidden">On Sale!</span>
+            class="text-red-500 border rounded-xl absolute text-md left-3 top-3 lg:left-5 lg:top-5 px-3 py-0.5
+            {% unless current_variant.compare_at_price > current_variant.price %}hidden{% endunless %}
+            ">On Sale!</span>
 
     </div>
     {% endif %}
-    <div class="collection-product__content">
-        <p>{{ product.title | escape | link_to: product.url }}</p>
-        <p data-placeholder="price">{{ product.price | money }}</p>
-        <ul class="flex gap-2">
+    <div class="collection-product__content text-sm">
+        <ul class="flex gap-2 flex-wrap mb-3">
             {% for variant in product.variants %}
             <li>
                 <button 
                     onClick="selectProductVariant(variantsDataProd{{ product.id }}, {{ product.id }}, {{ variant.id }})"
                     data-button="{{ variant.id }}"
-                    class="{% if variant==current_variant %}outline-1{% endif %} outline-offset-2 outline-sky-900
+                    aria-label="Select {{ variant.title }} variant"
+                    class="{% if variant==current_variant %}outline-1{% endif %} outline-offset-1 outline-sky-900
                         w-5 h-5 rounded-full block border-0 cursor-pointer"
                     style="background-color: {{ variant.metafields.custom.color_hex_code }};">
                 </button>
             </li>
             {% endfor %}
         </ul>
+        <p>{{ product.vendor }}</p>
+        <p class="text-base mb-1.5 font-medium text-sky-900">{{ product.title | escape | link_to: product.url }}</p>
+        <p data-placeholder="price" aria-live="polite">{{ current_variant.price | money }}</p>
+
     </div>
 </div>

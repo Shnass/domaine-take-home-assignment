@@ -3,6 +3,9 @@
 /* Reset styles inspired by https://www.joshwcomeau.com/css/custom-css-reset/ */
 * {
   box-sizing: border-box;
+}
+
+body, html{
   margin: 0;
 }
 
