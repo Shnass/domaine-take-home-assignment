@@ -1,0 +1,32 @@
+<div class="collection-product">
+    {% if product.featured_image %}
+    <div class="border border-neutral-200 rounded-2xl p-4 w-1/2 md:w-1/3 lg:w-1/5">
+        {% render 'image' , class: 'collection-product__image' , image:
+        product.featured_image, url: product.url, width: 400, height: 400, crop: 'center' %}
+    </div>
+    {% endif %} <div class="collection-product__content">
+        <p>{{ product.title | escape | link_to: product.url }}</p>
+        <p>{{ product.price | money }}</p>
+
+        <script>
+            console.log({{ product | json}})
+        </script>
+
+        {% assign current_variant = product.selected_or_first_available_variant %}
+
+        <ul class="flex gap-2">
+            {% for variant in product.variants %}
+            <li>
+                <button value="{{ variant.id }}" class="w-5 h-5 rounded-full block border-0"
+                    style="background-color: {{ variant.metafields.custom.color_hex_code }};">
+                    {% comment %}{% if variant==current_variant %} selected="selected" {% endif %}{% endcomment %}
+                </button>
+
+            </li>
+            {% endfor %}
+        </ul>
+
+
+
+    </div>
+</div>
