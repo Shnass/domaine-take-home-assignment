@@ -66,7 +66,14 @@
         </ul>
         <p>{{ product.vendor }}</p>
         <p class="text-base mb-1.5 font-medium text-sky-900">{{ product.title | escape | link_to: product.url }}</p>
-        <p data-placeholder="price" aria-live="polite">{{ current_variant.price | money }}</p>
+        <p data-placeholder="price" aria-live="polite">
+            {% if current_variant.price < current_variant.compare_at_price %} 
+            <span class="line-through">{{ current_variant.compare_at_price | money}}</span>
+            <span class="text-red-500">{{ current_variant.price | money}}</span>
+            {% else %}
+                {{ current_variant.price | money}}
+            {% endif %}
+        </p>
 
     </div>
 </div>
